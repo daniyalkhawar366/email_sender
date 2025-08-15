@@ -10,5 +10,4 @@ LOG_FILE = os.getenv('LOG_FILE', 'email_log.txt')
 
 # Email sending configuration
 BATCH_SIZE = int(os.getenv('BATCH_SIZE', '3'))
-WINDOW_MINUTES = int(os.getenv('WINDOW_MINUTES', '120'))
 MIN_GAP_MINUTES = int(os.getenv('MIN_GAP_MINUTES', '30')) 

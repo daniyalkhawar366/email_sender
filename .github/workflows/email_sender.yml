@@ -23,17 +23,6 @@ jobs:
       run: |
         pip install -r requirements.txt
         
-    - name: Create CSV file from secrets
-      run: |
-        echo "${{ secrets.CSV_DATA }}" > smykm_emails.csv
-        
-    - name: Download previous progress (if exists)
-      uses: actions/download-artifact@v3
-      with:
-        name: email-progress
-        path: .
-      continue-on-error: true
-        
     - name: Run email sender
       env:
         YOUR_EMAIL: ${{ secrets.YOUR_EMAIL }}
@@ -43,7 +32,6 @@ jobs:
         CSV_FILE: smykm_emails.csv
         LOG_FILE: email_log.txt
         BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
-        WINDOW_MINUTES: ${{ secrets.WINDOW_MINUTES }}
         MIN_GAP_MINUTES: ${{ secrets.MIN_GAP_MINUTES }}
       run: |
         python email_sender_secure.py
@@ -53,11 +41,4 @@ jobs:
       with:
         name: email-logs
         path: email_log.txt
-        retention-days: 30
-        
-    - name: Upload progress tracker
-      uses: actions/upload-artifact@v3
-      with:
-        name: email-progress
-        path: email_progress.json
         retention-days: 30 

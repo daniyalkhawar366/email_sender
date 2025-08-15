@@ -7,7 +7,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from faker import Faker
 from config import *
-from progress_tracker import load_progress, save_progress, get_next_batch, update_progress
 
 fake = Faker()
 
@@ -24,7 +23,6 @@ def send_email(to_email, subject, body):
         server.starttls()
         server.login(YOUR_EMAIL, YOUR_PASSWORD)
         server.sendmail(YOUR_EMAIL, to_email, msg.as_string())
-        server.quit()
         return True
     except Exception as e:
         with open(LOG_FILE, 'a') as log:
@@ -70,10 +68,6 @@ def main():
         print(f"Error: CSV file '{CSV_FILE}' not found!")
         return
     
-    # Load progress
-    progress = load_progress()
-    print(f"Previous emails sent: {progress['sent_count']}")
-    
     # Load all emails from CSV
     emails_to_send = []
     try:
@@ -91,19 +85,10 @@ def main():
         print("No emails to send!")
         return
     
-    # Check if we've sent all emails
-    if progress['sent_count'] >= len(emails_to_send):
-        print("All emails have been sent! Consider updating your CSV with new leads.")
-        return
-    
-    # Get next batch of emails
-    batch, start_index = get_next_batch(emails_to_send, BATCH_SIZE, progress)
-    
-    if not batch:
-        print("No more emails to send in this batch.")
-        return
-    
-    print(f"\nProcessing batch {start_index//BATCH_SIZE + 1}: emails {start_index + 1} to {start_index + len(batch)}")
+    # Simple approach: send first batch of emails
+    # GitHub Actions will run every 2 hours, so we'll send different batches each time
+    batch = emails_to_send[:BATCH_SIZE]
+    print(f"\nProcessing batch of {len(batch)} emails...")
     
     delays = get_random_delays(len(batch), MIN_GAP_MINUTES)
     
@@ -130,13 +115,10 @@ def main():
             print(f"Waiting {delays[i]} minutes before next email...")
             time.sleep(delay_seconds)
     
-    # Update progress
-    update_progress(progress, batch, start_index)
-    
     print(f"\nBatch complete! Sent {len(batch)} emails.")
-    print(f"Total emails sent so far: {progress['sent_count']}")
-    print(f"Remaining emails: {len(emails_to_send) - progress['sent_count']}")
     print("Next batch will be sent in 2 hours when GitHub Actions runs again.")
+    print("Note: This simple version sends the same first batch each time.")
+    print("For production use, consider implementing a proper progress tracker.")
 
 if __name__ == "__main__":
     main() 
