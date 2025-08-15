@@ -1,0 +1,61 @@
+name: Email Sender Simple
+
+on:
+  schedule:
+    # Run every 2 hours (cron syntax: minute hour day month day-of-week)
+    # 0 = at minute 0, */2 = every 2nd hour, * = every day, * = every month, * = every day of week
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  send-emails:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Download progress file (if exists)
+      uses: actions/download-artifact@v4
+      with:
+        name: email-progress
+        path: .
+      continue-on-error: true
+        
+    - name: Run email sender
+      env:
+        YOUR_EMAIL: ${{ secrets.YOUR_EMAIL }}
+        YOUR_PASSWORD: ${{ secrets.YOUR_PASSWORD }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        CSV_FILE: smykm_emails.csv
+        LOG_FILE: email_log.txt
+        BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
+        MIN_GAP_MINUTES: ${{ secrets.MIN_GAP_MINUTES }}
+      run: |
+        python email_sender_secure.py
+        
+    - name: Upload progress file
+      uses: actions/upload-artifact@v4
+      with:
+        name: email-progress
+        path: email_progress.json
+        retention-days: 30
+        
+    - name: Show logs
+      run: |
+        echo "=== Email Sender Logs ==="
+        if [ -f email_log.txt ]; then
+          cat email_log.txt
+        else
+          echo "No log file found"
+        fi 

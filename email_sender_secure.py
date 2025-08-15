@@ -3,12 +3,29 @@ import random
 import time
 import smtplib
 import os
+import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from faker import Faker
 from config import *
 
 fake = Faker()
+
+def load_progress():
+    """Load progress from file."""
+    progress_file = 'email_progress.json'
+    if os.path.exists(progress_file):
+        try:
+            with open(progress_file, 'r') as f:
+                return json.load(f)
+        except:
+            pass
+    return {'sent_count': 0, 'last_batch': []}
+
+def save_progress(progress):
+    """Save progress to file."""
+    with open('email_progress.json', 'w') as f:
+        json.dump(progress, f)
 
 def send_email(to_email, subject, body):
     """Send an email using SMTP."""
@@ -23,6 +40,7 @@ def send_email(to_email, subject, body):
         server.starttls()
         server.login(YOUR_EMAIL, YOUR_PASSWORD)
         server.sendmail(YOUR_EMAIL, to_email, msg.as_string())
+        server.quit()
         return True
     except Exception as e:
         with open(LOG_FILE, 'a') as log:
@@ -63,6 +81,10 @@ def main():
     print(f"Min Gap: {MIN_GAP_MINUTES} minutes")
     print(f"GitHub Actions runs every 2 hours - sending {BATCH_SIZE} emails per run")
     
+    # Load progress
+    progress = load_progress()
+    print(f"Previous emails sent: {progress['sent_count']}")
+    
     # Check if CSV file exists
     if not os.path.exists(CSV_FILE):
         print(f"Error: CSV file '{CSV_FILE}' not found!")
@@ -85,10 +107,20 @@ def main():
         print("No emails to send!")
         return
     
-    # Simple approach: send first batch of emails
-    # GitHub Actions will run every 2 hours, so we'll send different batches each time
-    batch = emails_to_send[:BATCH_SIZE]
-    print(f"\nProcessing batch of {len(batch)} emails...")
+    # Check if we've sent all emails
+    if progress['sent_count'] >= len(emails_to_send):
+        print("All emails have been sent! Consider updating your CSV with new leads.")
+        return
+    
+    # Get next batch of emails
+    start_index = progress['sent_count']
+    batch = emails_to_send[start_index:start_index + BATCH_SIZE]
+    
+    if not batch:
+        print("No more emails to send in this batch.")
+        return
+    
+    print(f"\nProcessing batch {start_index//BATCH_SIZE + 1}: emails {start_index + 1} to {start_index + len(batch)}")
     
     delays = get_random_delays(len(batch), MIN_GAP_MINUTES)
     
@@ -115,10 +147,15 @@ def main():
             print(f"Waiting {delays[i]} minutes before next email...")
             time.sleep(delay_seconds)
     
+    # Update progress
+    progress['sent_count'] = start_index + len(batch)
+    progress['last_batch'] = [email[0] for email in batch]
+    save_progress(progress)
+    
     print(f"\nBatch complete! Sent {len(batch)} emails.")
+    print(f"Total emails sent so far: {progress['sent_count']}")
+    print(f"Remaining emails: {len(emails_to_send) - progress['sent_count']}")
     print("Next batch will be sent in 2 hours when GitHub Actions runs again.")
-    print("Note: This simple version sends the same first batch each time.")
-    print("For production use, consider implementing a proper progress tracker.")
 
 if __name__ == "__main__":
     main() 
