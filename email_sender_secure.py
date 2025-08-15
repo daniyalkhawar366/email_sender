@@ -17,9 +17,25 @@ def load_progress():
     if os.path.exists(progress_file):
         try:
             with open(progress_file, 'r') as f:
-                return json.load(f)
-        except:
-            pass
+                progress = json.load(f)
+                
+            # Ensure all required keys exist (backward compatibility)
+            if 'all_sent_emails' not in progress:
+                progress['all_sent_emails'] = []
+            if 'last_batch' not in progress:
+                progress['last_batch'] = []
+            if 'sent_count' not in progress:
+                progress['sent_count'] = 0
+                
+            # If we have old progress data, populate all_sent_emails
+            if progress['last_batch'] and not progress['all_sent_emails']:
+                progress['all_sent_emails'] = progress['last_batch'].copy()
+                
+            return progress
+        except Exception as e:
+            print(f"Warning: Error loading progress file: {e}")
+            print("Creating new progress file...")
+    
     return {'sent_count': 0, 'last_batch': [], 'all_sent_emails': []}
 
 def save_progress(progress):
