@@ -27,6 +27,13 @@ jobs:
       run: |
         echo "${{ secrets.CSV_DATA }}" > smykm_emails.csv
         
+    - name: Download previous progress (if exists)
+      uses: actions/download-artifact@v3
+      with:
+        name: email-progress
+        path: .
+      continue-on-error: true
+        
     - name: Run email sender
       env:
         YOUR_EMAIL: ${{ secrets.YOUR_EMAIL }}
@@ -46,4 +53,11 @@ jobs:
       with:
         name: email-logs
         path: email_log.txt
+        retention-days: 30
+        
+    - name: Upload progress tracker
+      uses: actions/upload-artifact@v3
+      with:
+        name: email-progress
+        path: email_progress.json
         retention-days: 30 

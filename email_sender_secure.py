@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from faker import Faker
 from config import *
+from progress_tracker import load_progress, save_progress, get_next_batch, update_progress
 
 fake = Faker()
 
@@ -40,18 +41,19 @@ def parse_full_email(full_email):
     else:
         raise ValueError("Invalid email format: Missing 'Subject:'")
 
-def get_random_delays(batch_size, window_minutes, min_gap_minutes):
-    """Generate random delays within the window with min gaps."""
-    total_gap_needed = min_gap_minutes * (batch_size - 1)
-    if total_gap_needed >= window_minutes:
-        raise ValueError("Window too small for min gaps")
+def get_random_delays(batch_size, min_gap_minutes):
+    """Generate random delays between emails in a batch."""
+    if batch_size <= 1:
+        return [0]
     
-    delays = sorted([random.randint(0, window_minutes - total_gap_needed) for _ in range(batch_size)])
-    for i in range(1, batch_size):
-        while delays[i] - delays[i-1] < min_gap_minutes:
-            delays[i] += min_gap_minutes - (delays[i] - delays[i-1])
+    # Create delays with minimum gaps between emails
+    delays = []
+    for i in range(batch_size - 1):
+        # Random delay between min_gap_minutes and min_gap_minutes + 15 minutes
+        delay = random.randint(min_gap_minutes, min_gap_minutes + 15)
+        delays.append(delay)
     
-    return [delays[0]] + [delays[i] - delays[i-1] for i in range(1, batch_size)]
+    return delays
 
 def main():
     """Main function to run the email sender."""
@@ -60,13 +62,17 @@ def main():
     print(f"From Email: {YOUR_EMAIL}")
     print(f"CSV File: {CSV_FILE}")
     print(f"Batch Size: {BATCH_SIZE}")
-    print(f"Window: {WINDOW_MINUTES} minutes")
     print(f"Min Gap: {MIN_GAP_MINUTES} minutes")
+    print(f"GitHub Actions runs every 2 hours - sending {BATCH_SIZE} emails per run")
     
     # Check if CSV file exists
     if not os.path.exists(CSV_FILE):
         print(f"Error: CSV file '{CSV_FILE}' not found!")
         return
+    
+    # Load progress
+    progress = load_progress()
+    print(f"Previous emails sent: {progress['sent_count']}")
     
     # Load all emails from CSV
     emails_to_send = []
@@ -76,7 +82,7 @@ def main():
             for row in reader:
                 if row['Email Address'] and row['Full Email']:
                     emails_to_send.append((row['Email Address'], row['Full Email']))
-        print(f"Loaded {len(emails_to_send)} emails from CSV")
+        print(f"Total emails in CSV: {len(emails_to_send)}")
     except Exception as e:
         print(f"Error reading CSV file: {e}")
         return
@@ -85,46 +91,52 @@ def main():
         print("No emails to send!")
         return
     
-    # Email sending loop
-    sent_count = 0
-    while emails_to_send:
-        # Get next batch
-        batch = emails_to_send[:BATCH_SIZE]
-        emails_to_send = emails_to_send[BATCH_SIZE:]
-        
-        print(f"\nProcessing batch of {len(batch)} emails...")
-        
-        delays = get_random_delays(len(batch), WINDOW_MINUTES, MIN_GAP_MINUTES)
-        
-        for i, (to_email, full_email) in enumerate(batch):
-            try:
-                subject, body = parse_full_email(full_email)
-                print(f"Sending email {sent_count + 1} to {to_email}")
-                success = send_email(to_email, subject, body)
-                status = "Success" if success else "Failed"
-                
-                with open(LOG_FILE, 'a') as log:
-                    log.write(f"Sent to {to_email} at {time.strftime('%Y-%m-%d %H:%M:%S')}: {status}\n")
-                
-                sent_count += 1
-                print(f"Email {sent_count}: {to_email} ({status})")
-                
-            except Exception as e:
-                print(f"Error processing {to_email}: {e}")
-                with open(LOG_FILE, 'a') as log:
-                    log.write(f"Error processing {to_email}: {e}\n")
-            
-            # Sleep for the random delay to next email (except last in batch)
-            if i < len(batch) - 1:
-                delay_seconds = delays[i+1] * 60
-                print(f"Waiting {delays[i+1]} minutes before next email...")
-                time.sleep(delay_seconds)
-        
-        if emails_to_send:
-            print(f"\nWaiting {WINDOW_MINUTES} minutes until next batch...")
-            time.sleep(WINDOW_MINUTES * 60)
+    # Check if we've sent all emails
+    if progress['sent_count'] >= len(emails_to_send):
+        print("All emails have been sent! Consider updating your CSV with new leads.")
+        return
     
-    print(f"\nAll {sent_count} emails sent successfully!")
+    # Get next batch of emails
+    batch, start_index = get_next_batch(emails_to_send, BATCH_SIZE, progress)
+    
+    if not batch:
+        print("No more emails to send in this batch.")
+        return
+    
+    print(f"\nProcessing batch {start_index//BATCH_SIZE + 1}: emails {start_index + 1} to {start_index + len(batch)}")
+    
+    delays = get_random_delays(len(batch), MIN_GAP_MINUTES)
+    
+    for i, (to_email, full_email) in enumerate(batch):
+        try:
+            subject, body = parse_full_email(full_email)
+            print(f"Sending email {i + 1} to {to_email}")
+            success = send_email(to_email, subject, body)
+            status = "Success" if success else "Failed"
+            
+            with open(LOG_FILE, 'a') as log:
+                log.write(f"Sent to {to_email} at {time.strftime('%Y-%m-%d %H:%M:%S')}: {status}\n")
+            
+            print(f"Email {i + 1}: {to_email} ({status})")
+            
+        except Exception as e:
+            print(f"Error processing {to_email}: {e}")
+            with open(LOG_FILE, 'a') as log:
+                log.write(f"Error processing {to_email}: {e}\n")
+        
+        # Sleep for the random delay to next email (except last in batch)
+        if i < len(batch) - 1:
+            delay_seconds = delays[i] * 60
+            print(f"Waiting {delays[i]} minutes before next email...")
+            time.sleep(delay_seconds)
+    
+    # Update progress
+    update_progress(progress, batch, start_index)
+    
+    print(f"\nBatch complete! Sent {len(batch)} emails.")
+    print(f"Total emails sent so far: {progress['sent_count']}")
+    print(f"Remaining emails: {len(emails_to_send) - progress['sent_count']}")
+    print("Next batch will be sent in 2 hours when GitHub Actions runs again.")
 
 if __name__ == "__main__":
     main() 
