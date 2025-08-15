@@ -1,50 +1,33 @@
 import pandas as pd
 
-# Final contact data
-final_data = [
-    {"Full Name": "", "Company Name": "Reyes Perfect Remodeling", "Instagram URL": "", "Email Address": "", "Phone Number": "8328330158"},
-    {"Full Name": "", "Company Name": "Gr Remodeling", "Instagram URL": "", "Email Address": "lilidimples26@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "", "Instagram URL": "", "Email Address": "jt3ti@aol.com", "Phone Number": "2108453083"},
-    {"Full Name": "", "Company Name": "", "Instagram URL": "", "Email Address": "carringtonrealestate2024@gmail.com", "Phone Number": "346352XXXX"},  # Redact or correct if unknown
-    {"Full Name": "", "Company Name": "Reborn Remodeling", "Instagram URL": "", "Email Address": "reborn.remodeling@gmail.com", "Phone Number": "7139247389"},
-    {"Full Name": "", "Company Name": "Urban Remodeling Services Inc", "Instagram URL": "", "Email Address": "morrisarrevalo@yahoo.com", "Phone Number": "2817488610"},
-    {"Full Name": "", "Company Name": "Garcia Construction and Remodeling", "Instagram URL": "", "Email Address": "sagarcia2021me@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "Advanced Solutions Home Improvement & Remodeling", "Instagram URL": "", "Email Address": "ashir.llc@icloud.com", "Phone Number": "3463149278"},
-    {"Full Name": "", "Company Name": "HG Luxury Homes", "Instagram URL": "", "Email Address": "hgluxuryhomes@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "Handyman Houston Remodeling", "Instagram URL": "", "Email Address": "handymanhoustonremodeling@gmail.com", "Phone Number": ""},
-    {"Full Name": "Jackie Venters", "Company Name": "True Remodeling & Renovations", "Instagram URL": "", "Email Address": "jackieventers.realtor@gmail.com", "Phone Number": "8322356240"},
-    {"Full Name": "", "Company Name": "Houston1 Remodeling LLC", "Instagram URL": "", "Email Address": "nevresudinhaskic@yahoo.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "", "Instagram URL": "", "Email Address": "jasonbpenberthy@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "David's Construction & Homes Remodeling LLC", "Instagram URL": "", "Email Address": "", "Phone Number": ""},
-    {"Full Name": "Hector Rodriguez", "Company Name": "HR Remodeling", "Instagram URL": "", "Email Address": "hector.s.rodriguez1@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "TH Construction & Remodeling", "Instagram URL": "", "Email Address": "thremodelinghouston@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "David Remodeling", "Instagram URL": "", "Email Address": "dconstructionandremodeling@gmail.com", "Phone Number": "8408412569"},
-    {"Full Name": "", "Company Name": "Apka Ghar", "Instagram URL": "", "Email Address": "apka-ghar@outlook.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "Adolfo & Son's Remodeling", "Instagram URL": "", "Email Address": "", "Phone Number": "2817162907"},
-    {"Full Name": "Jeremy Howard", "Company Name": "Lake Point Remodeling", "Instagram URL": "", "Email Address": "", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "McCarson Homes LLC", "Instagram URL": "", "Email Address": "mccarsonhomes281@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "Torres Remodeling & Painting", "Instagram URL": "", "Email Address": "", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "Flores Drywall & Painting", "Instagram URL": "", "Email Address": "floresdrywallpainting@gmail.com", "Phone Number": ""},
-    {"Full Name": "", "Company Name": "YOA Remodeling", "Instagram URL": "", "Email Address": "yoaremodeling@gmail.com", "Phone Number": "8326141672"},
-    {"Full Name": "Jacob Guzman", "Company Name": "J. Guzman General Remodeling Services", "Instagram URL": "", "Email Address": "jacoboguzman49@gmail.com", "Phone Number": "2819030420"},
-    {"Full Name": "Carlos Guerrero", "Company Name": "", "Instagram URL": "", "Email Address": "guerrero.saint@yahoo.com", "Phone Number": "8322350283"},
-    {"Full Name": "", "Company Name": "Global Deco USA Corp.", "Instagram URL": "", "Email Address": "globaldecousa@yahoo.com", "Phone Number": "8326777828"},
+# More scraped leads with emails
+new_contacts = [
+    {"Full Name": "Jenni Edwards", "Company Name": "Braden Real Estate Group", "Instagram URL": "https://www.instagram.com/jenniedwards_", "Email Address": "", "Phone Number": ""},  # Skipped (email not visible)
+    {"Full Name": "", "Company Name": "Renee Realty Group", "Instagram URL": "https://www.instagram.com/d_.w", "Email Address": "", "Phone Number": "281-815-0945"},  # Skipped (email not shown)
+    {"Full Name": "Sonsire Gonzalez", "Company Name": "Sunshine Realtors", "Instagram URL": "https://www.instagram.com/sonsire_florida_realtor", "Email Address": "sonsiregonzalez@gmail.com", "Phone Number": "772-200-9112"},
+    {"Full Name": "Kimberly Mata", "Company Name": "", "Instagram URL": "https://www.instagram.com/kimberlymata_realtor", "Email Address": "", "Phone Number": ""},  # Skipped (no email)
+    {"Full Name": "Property Fix Houston LLC", "Company Name": "Property Fix Houston", "Instagram URL": "https://www.instagram.com/propertyfixhoustonllc", "Email Address": "propertyfixhouston@gmail.com", "Phone Number": "832-629-8292"},
+    {"Full Name": "Carnisha Emanuel", "Company Name": "", "Instagram URL": "https://www.instagram.com/carnishajoi", "Email Address": "", "Phone Number": ""},  # Skipped (no email)
+    {"Full Name": "Kia Nichol", "Company Name": "", "Instagram URL": "https://www.instagram.com/kianichol", "Email Address": "", "Phone Number": ""},  # Skipped (no email)
 ]
 
+# Filter only those with emails
+new_contacts = [entry for entry in new_contacts if entry["Email Address"].strip() != ""]
+
 # Convert to DataFrame
-final_df = pd.DataFrame(final_data)
+new_df = pd.DataFrame(new_contacts)
 
-# File path
-csv_path = "houston_remodeling_contacts.csv"
+# CSV path
+csv_path = "houston_construction_leads.csv"
 
-# Append or create CSV
+# Append or create the CSV
 try:
     existing_df = pd.read_csv(csv_path)
-    combined_df = pd.concat([existing_df, final_df], ignore_index=True)
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
 except FileNotFoundError:
-    combined_df = final_df
+    combined_df = new_df
 
-# Save updated file
+# Save updated list
 combined_df.to_csv(csv_path, index=False)
 
-print("Final contacts appended successfully.")
+print("✅ New leads with email addresses added to 'houston_construction_leads.csv'")

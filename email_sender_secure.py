@@ -20,12 +20,16 @@ def load_progress():
                 return json.load(f)
         except:
             pass
-    return {'sent_count': 0, 'last_batch': []}
+    return {'sent_count': 0, 'last_batch': [], 'all_sent_emails': []}
 
 def save_progress(progress):
     """Save progress to file."""
-    with open('email_progress.json', 'w') as f:
-        json.dump(progress, f)
+    try:
+        with open('email_progress.json', 'w') as f:
+            json.dump(progress, f, indent=2)
+        print(f"✅ Progress saved: {progress['sent_count']} emails sent")
+    except Exception as e:
+        print(f"❌ Error saving progress: {e}")
 
 def send_email(to_email, subject, body):
     """Send an email using SMTP."""
@@ -84,6 +88,7 @@ def main():
     # Load progress
     progress = load_progress()
     print(f"Previous emails sent: {progress['sent_count']}")
+    print(f"Total unique emails sent: {len(progress['all_sent_emails'])}")
     
     # Check if CSV file exists
     if not os.path.exists(CSV_FILE):
@@ -124,6 +129,9 @@ def main():
     
     delays = get_random_delays(len(batch), MIN_GAP_MINUTES)
     
+    # Track emails sent in this batch
+    batch_emails = []
+    
     for i, (to_email, full_email) in enumerate(batch):
         try:
             subject, body = parse_full_email(full_email)
@@ -136,6 +144,10 @@ def main():
             
             print(f"Email {i + 1}: {to_email} ({status})")
             
+            # Track successful emails
+            if success:
+                batch_emails.append(to_email)
+            
         except Exception as e:
             print(f"Error processing {to_email}: {e}")
             with open(LOG_FILE, 'a') as log:
@@ -147,13 +159,21 @@ def main():
             print(f"Waiting {delays[i]} minutes before next email...")
             time.sleep(delay_seconds)
     
-    # Update progress
-    progress['sent_count'] = start_index + len(batch)
-    progress['last_batch'] = [email[0] for email in batch]
-    save_progress(progress)
+    # Update progress with new emails
+    if batch_emails:
+        progress['sent_count'] = start_index + len(batch)
+        progress['last_batch'] = batch_emails
+        progress['all_sent_emails'].extend(batch_emails)
+        
+        # Remove duplicates from all_sent_emails
+        progress['all_sent_emails'] = list(set(progress['all_sent_emails']))
+        
+        # Save progress
+        save_progress(progress)
     
     print(f"\nBatch complete! Sent {len(batch)} emails.")
     print(f"Total emails sent so far: {progress['sent_count']}")
+    print(f"Total unique emails sent: {len(progress['all_sent_emails'])}")
     print(f"Remaining emails: {len(emails_to_send) - progress['sent_count']}")
     print("Next batch will be sent in 2 hours when GitHub Actions runs again.")
 
