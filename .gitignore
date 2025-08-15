@@ -1,8 +1,11 @@
 # Sensitive files - NEVER commit these
 Email_sender.py
 email_log.txt
-*.csv
+email_log.txt
 *.log
+
+# Allow our leads CSV file
+!smykm_emails.csv
 
 # Python
 __pycache__/
