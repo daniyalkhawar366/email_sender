@@ -1,6 +1,5 @@
 # Sensitive files - NEVER commit these
 Email_sender.py
-smykm_emails.csv
 email_log.txt
 *.csv
 *.log
