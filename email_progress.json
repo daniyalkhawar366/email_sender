@@ -1,4 +1,12 @@
 {
-    "sent_count": 3,
-    "last_batch": ["josaints999@outlook.com", "artekremodel@gmail.com", "olivoremodeling@gmail.com"]
-  }
+  "sent_count": 6,
+  "last_batch": ["mtzremodelingtx@gmail.com", "buzzhomeremodeling@gmail.com", "cavvremodeling@yahoo.com"],
+  "all_sent_emails": [
+    "josaints999@outlook.com",
+    "artekremodel@gmail.com",
+    "olivoremodeling@gmail.com",
+    "mtzremodelingtx@gmail.com",
+    "buzzhomeremodeling@gmail.com",
+    "cavvremodeling@yahoo.com"
+  ]
+}
