@@ -58,4 +58,13 @@ jobs:
           cat email_log.txt
         else
           echo "No log file found"
+        fi
+        
+    - name: Show progress file
+      run: |
+        echo "=== Progress File Contents ==="
+        if [ -f email_progress.json ]; then
+          cat email_progress.json
+        else
+          echo "No progress file found (first run)"
         fi 
