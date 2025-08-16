@@ -3,7 +3,6 @@ name: Email Sender Simple
 on:
   schedule:
     # Run every 2 hours (cron syntax: minute hour day month day-of-week)
-    # 0 = at minute 0, */2 = every 2nd hour, * = every day, * = every month, * = every day of week
     - cron: '0 */2 * * *'
   workflow_dispatch: # Allow manual triggering
 
@@ -14,6 +13,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -43,6 +44,14 @@ jobs:
         MIN_GAP_MINUTES: ${{ secrets.MIN_GAP_MINUTES }}
       run: |
         python email_sender_secure.py
+        
+    - name: Commit and push progress changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add email_progress.json
+        git commit -m "Auto-update progress: $(date)" || echo "No changes to commit"
+        git push origin master
         
     - name: Upload progress file
       uses: actions/upload-artifact@v4
