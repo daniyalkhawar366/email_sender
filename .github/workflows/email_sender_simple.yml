@@ -47,11 +47,11 @@ jobs:
         
     - name: Commit and push progress changes
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
         git add email_progress.json
         git commit -m "Auto-update progress: $(date)" || echo "No changes to commit"
-        git push origin master
+        git push origin master || echo "Push failed but continuing"
         
     - name: Upload progress file
       uses: actions/upload-artifact@v4
