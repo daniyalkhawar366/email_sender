@@ -82,13 +82,8 @@ def get_random_delays(batch_size, min_gap_minutes):
     if batch_size <= 1:
         return [0]
     
-    # Create delays with minimum gaps between emails
-    delays = []
-    for i in range(batch_size - 1):
-        # Random delay between min_gap_minutes and min_gap_minutes + 15 minutes
-        delay = random.randint(min_gap_minutes, min_gap_minutes + 15)
-        delays.append(delay)
-    
+    # For testing: set all delays to 1 minute
+    delays = [1 for _ in range(batch_size - 1)]
     return delays
 
 def main():

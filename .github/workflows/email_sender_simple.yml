@@ -1,4 +1,7 @@
+
 name: Email Sender Simple
+permissions:
+  contents: write
 
 on:
   schedule:
@@ -46,12 +49,14 @@ jobs:
         python email_sender_secure.py
         
     - name: Commit and push progress changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add email_progress.json
         git commit -m "Auto-update progress: $(date)" || echo "No changes to commit"
-        git push origin master || echo "Push failed but continuing"
+        git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref }} || echo "Push failed but continuing"
         
     - name: Upload progress file
       uses: actions/upload-artifact@v4
