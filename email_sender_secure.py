@@ -186,6 +186,23 @@ def main():
         
         # Save progress
         save_progress(progress)
+
+        # Remove sent leads from CSV
+        with open(CSV_FILE, mode='r', encoding='utf-8') as infile:
+            reader = list(csv.DictReader(infile))
+        # Filter out rows whose email was just sent
+        remaining_rows = [row for row in reader if row['Email Address'] not in batch_emails]
+        # Write remaining rows back to CSV
+        if remaining_rows:
+            with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=reader[0].keys())
+                writer.writeheader()
+                writer.writerows(remaining_rows)
+        else:
+            # If no rows remain, clear the CSV
+            with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=reader[0].keys())
+                writer.writeheader()
     
     print(f"\nBatch complete! Sent {len(batch)} emails.")
     print(f"Total emails sent so far: {progress['sent_count']}")
