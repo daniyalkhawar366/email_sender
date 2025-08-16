@@ -1,12 +1,19 @@
 {
-  "sent_count": 6,
-  "last_batch": ["mtzremodelingtx@gmail.com", "buzzhomeremodeling@gmail.com", "cavvremodeling@yahoo.com"],
+  "sent_count": 9,
+  "last_batch": [
+    "ivangzmn@icloud.com",
+    "jacoboguzman49@gmail.com",
+    "josue.vasquez.8790@gmail.com"
+  ],
   "all_sent_emails": [
+    "jacoboguzman49@gmail.com",
+    "josue.vasquez.8790@gmail.com",
     "josaints999@outlook.com",
-    "artekremodel@gmail.com",
-    "olivoremodeling@gmail.com",
-    "mtzremodelingtx@gmail.com",
+    "cavvremodeling@yahoo.com",
+    "ivangzmn@icloud.com",
     "buzzhomeremodeling@gmail.com",
-    "cavvremodeling@yahoo.com"
+    "mtzremodelingtx@gmail.com",
+    "olivoremodeling@gmail.com",
+    "artekremodel@gmail.com"
   ]
 }
